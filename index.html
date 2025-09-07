@@ -53,6 +53,7 @@
             height: 100%;
             z-index: 5;
             overflow: hidden;
+            touch-action: none; /* Запрещает скролл на телефонах */
         }
 
         .bubble {
@@ -144,6 +145,31 @@
             to {
                 transform: translateY(-120vh);
                 opacity: 0;
+            }
+        }
+
+        /* АДАПТАЦИЯ ПОД ТЕЛЕФОНЫ (ширина экрана до 768px) */
+        @media (max-width: 768px) {
+            .score-display, .lives-display {
+                font-size: 1.5em; /* Уменьшаем размер шрифта */
+                top: 10px;
+            }
+            .score-display { left: 10px; }
+            .lives-display { right: 10px; }
+            .high-score-display { 
+                font-size: 1em; /* Уменьшаем размер шрифта */
+                top: 40px;
+                left: 10px;
+            }
+            #game-over-screen h2 {
+                font-size: 2em;
+            }
+            #game-over-screen p {
+                font-size: 1em;
+            }
+            #restart-button {
+                padding: 10px 20px;
+                font-size: 1.2em;
             }
         }
     </style>
@@ -270,13 +296,20 @@
                     bubble.classList.add('life');
                 }
 
-                const size = Math.random() * 50 + 30;
+                const minSize = window.innerWidth > 768 ? 30 : 20;
+                const maxSize = window.innerWidth > 768 ? 80 : 60;
+                const size = Math.random() * (maxSize - minSize) + minSize;
                 bubble.style.width = `${size}px`;
                 bubble.style.height = `${size}px`;
                 bubble.style.left = `${Math.random() * (window.innerWidth - size)}px`;
                 bubble.style.animationDuration = `${Math.random() * 3 + 4}s`;
 
-                bubble.addEventListener('click', () => {
+                // Используем touchstart для лучшей отзывчивости на сенсорных экранах
+                bubble.addEventListener('click', handleBubbleTouch);
+                bubble.addEventListener('touchstart', handleBubbleTouch);
+
+                function handleBubbleTouch(event) {
+                    event.preventDefault(); // Предотвращаем стандартное действие (например, скролл)
                     if (!gameRunning) return;
                     if (bubble.classList.contains('good')) {
                         updateScore(1);
@@ -286,7 +319,7 @@
                         gainLife();
                     }
                     bubble.remove();
-                });
+                }
                 
                 bubble.addEventListener('animationend', () => {
                     if (gameRunning && bubble.classList.contains('good')) {
